@@ -2,6 +2,7 @@ package com.intermediate.Blog.Application.ServiceLayer;
 
 import com.intermediate.Blog.Application.DtoLayers.UserDto;
 import com.intermediate.Blog.Application.Exception.ResourceNotFoundException;
+import com.intermediate.Blog.Application.Models.AccountVisibility;
 import com.intermediate.Blog.Application.Models.User;
 import com.intermediate.Blog.Application.Repositories.UserRepo;
 import org.modelmapper.ModelMapper;
@@ -92,9 +93,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void makeAccountPublic(User user) {
+        if (user.getAccountVisibility() == AccountVisibility.PUBLIC){
+            throw new IllegalStateException("Account is already Public");
+        }
+        user.setAccountVisibility(AccountVisibility.PUBLIC);
+        repo.save(user);
+    }
+
+    @Override
+    public void makeAccountPrivate(User user) {
+        if(user.getAccountVisibility() == AccountVisibility.PRIVATE){
+            throw new IllegalStateException("Account is already Private");
+        }
+
+        user.setAccountVisibility(AccountVisibility.PRIVATE);
+        repo.save(user);
+    }
+
+    @Override
     public User getUserByEmail(String email){
         User user  = (User) repo.findByEmail(email).orElseThrow(()-> new ResourceNotFoundException("User","email" , email));
-
         return user;
     }
+
 }

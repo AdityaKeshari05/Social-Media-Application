@@ -13,4 +13,6 @@ public interface UserService {
     List<UserDto> getAllUsers();
     User getUserByEmail(String email);
     void deleteUser(Long userId);
+    void makeAccountPublic(User user);
+    void makeAccountPrivate(User user);
 }

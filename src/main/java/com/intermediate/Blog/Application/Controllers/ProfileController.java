@@ -46,34 +46,17 @@ public class ProfileController {
 
     @GetMapping("/me")
     public ResponseEntity<ProfileDto>  getMyProfile(){
-       String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-       User user = (User) userRepo.findByEmail(currentUser).orElseThrow(()-> new RuntimeException("User not Found"));
-
+        User user = getCurrentUser();
         List<PostDto> posts = postService.getPostByUser(user.getId());
-        UserProfile profile = profileService.getProfile(user.getId());
-
-        return ResponseEntity.ok(new ProfileDto(
-                profile.getUser().getUsername(),
-                profile.getBio(),
-                profile.getProfilePicture(),
-                profile.getNoOfPosts(),
-                posts
-        ));
+        return ResponseEntity.ok(profileService.buildProfileDto(user,user,posts)); // if i am the owner of the profile  then only will be able to see the profile.
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<ProfileDto> getUserProfile(@PathVariable Long userId){
         User user = userRepo.findById(userId).orElseThrow(()-> new ResourceNotFoundException("User", "id",userId));
         List<PostDto> posts = postService.getPostByUser(userId);
-        UserProfile profile = profileService.getProfile(userId);
-
-        return ResponseEntity.ok(new ProfileDto(
-                profile.getUser().getUsername(),
-                profile.getBio(),
-                profile.getProfilePicture(),
-                profile.getNoOfPosts(),
-                posts
-        ));
+        User viewer = getCurrentUser();
+        return ResponseEntity.ok(profileService.buildProfileDto( user ,viewer, posts)); // if the user follows the viewer in case the viewer's account is private then only will be able to see the user's profile
     }
 
 
@@ -82,39 +65,25 @@ public class ProfileController {
         public ResponseEntity<ProfileDto> updateBio(
                 @RequestBody Map<String ,String> body
                 ){
-            String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-            User user = (User) userRepo.findByEmail(currentUser).orElseThrow(()-> new RuntimeException("User not Found"));
+            User user = getCurrentUser();
             String bio  = body.get("bio");
-
             List<PostDto> posts = postService.getPostByUser(user.getId());
-            UserProfile  profile = profileService.getProfile(user.getId());
-            profile =  profileService.updateBio(currentUser , bio);
-
-
-            return ResponseEntity.ok(new ProfileDto(
-                    profile.getUser().getUsername(),
-                    profile.getBio(),
-                    profile.getProfilePicture(),
-                    profile.getNoOfPosts(),
-                    posts
-            ));
+            profileService.updateBio(user, bio);
+            return ResponseEntity.ok(profileService.buildProfileDto(user,user,posts)); // if the user is the owner of the profile than only can change or edit the profile .
         }
 
     @PostMapping("/profile-picture")
     public ResponseEntity<ProfileDto> updateProfilePicture(@RequestParam MultipartFile file ){
-        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = (User) userRepo.findByEmail(currentUser).orElseThrow(()-> new RuntimeException("User not Found"));
+        User user = getCurrentUser();
         String imageUrl = imageUploadService.uploadImage(file);
         profileService.updateProfilePicture(user,imageUrl);
         List<PostDto> posts = postService.getPostByUser(user.getId());
-        UserProfile  profile = profileService.getProfile(user.getId());
+        return ResponseEntity.ok(profileService.buildProfileDto(user,user, posts)); // Same case as update bio
+    }
 
-        return ResponseEntity.ok(new ProfileDto(
-                profile.getUser().getUsername(),
-                profile.getBio(),
-                profile.getProfilePicture(),
-                profile.getNoOfPosts(),
-                posts
-        ));
+    private User getCurrentUser(){
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = (User) userRepo.findByEmail(currentUser).orElseThrow(()-> new RuntimeException("User not Found"));
+        return user;
     }
   }

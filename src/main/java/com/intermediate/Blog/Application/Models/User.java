@@ -44,6 +44,10 @@ public class User {
     @OneToOne(mappedBy = "user" , cascade = CascadeType.ALL)
     private UserProfile userProfile;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AccountVisibility accountVisibility = AccountVisibility.PUBLIC;
+
 
     public UserProfile getUserProfile() {
         return userProfile;
@@ -147,5 +151,13 @@ public class User {
 
     public void setVerified(boolean verified) {
         this.verified = verified;
+    }
+
+    public AccountVisibility getAccountVisibility() {
+        return accountVisibility;
+    }
+
+    public void setAccountVisibility(AccountVisibility accountVisibility) {
+        this.accountVisibility = accountVisibility;
     }
 }

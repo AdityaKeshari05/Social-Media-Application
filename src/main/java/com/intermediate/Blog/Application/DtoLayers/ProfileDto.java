@@ -13,6 +13,7 @@ public class ProfileDto {
     private String profilePicture;
     private Long noOfPosts;
     private List<PostDto> posts;
+    private boolean isPrivate;
 
     public ProfileDto(String username, String bio, String profilePicture, Long noOfPosts , List<PostDto> posts) {
         this.username = username;
@@ -62,5 +63,13 @@ public class ProfileDto {
 
     public void setPosts(List<PostDto> posts) {
         this.posts = posts;
+    }
+
+    public boolean isPrivate() {
+        return isPrivate;
+    }
+
+    public void setPrivate(boolean aPrivate) {
+        isPrivate = aPrivate;
     }
 }

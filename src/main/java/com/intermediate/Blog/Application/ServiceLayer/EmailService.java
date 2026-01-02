@@ -1,6 +1,10 @@
 package com.intermediate.Blog.Application.ServiceLayer;
 
 
+import com.intermediate.Blog.Application.Exception.ResourceNotFoundException;
+import com.intermediate.Blog.Application.Models.PasswordReset;
+import com.intermediate.Blog.Application.Repositories.PasswordResetRepository;
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -15,6 +19,9 @@ public class EmailService {
 
     @Autowired
     private JavaMailSender mailSender;
+
+    @Autowired
+    private PasswordResetRepository passwordResetRepository;
 
     public void sendMail(String toEmail , String otp){
         try {
@@ -237,5 +244,93 @@ public class EmailService {
         }catch(Exception e){
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+
+    public void sendResetMail(String email , String token) throws MessagingException {
+        String link = "http://localhost:5173/reset-password?token=" + token;
+
+
+
+        String htmlContent = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reset Your Password - Go-Connect</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+        <td align="center" style="padding:40px 0;">
+            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+
+                <!-- HEADER -->
+                <tr>
+                    <td style="background:#0d6efd; padding:20px; text-align:center;">
+                        <h1 style="color:#ffffff; margin:0;">Go-Connect</h1>
+                    </td>
+                </tr>
+
+                <!-- BODY -->
+                <tr>
+                    <td style="padding:30px; color:#333;">
+                        <h2 style="margin-top:0;">Reset Your Password</h2>
+
+                        <p>Hello, ${USERNAME},</p>
+
+                        <p>We received a request to reset your password for your <strong>Go-Connect</strong> account.</p>
+
+                        <p>Click the button below to reset your password:</p>
+
+                        <!-- BUTTON -->
+                        <div style="text-align:center; margin:30px 0;">
+                            <a href="${RESET_LINK}"3
+                               style="background:#0d6efd; color:#ffffff; padding:14px 28px; text-decoration:none; border-radius:6px; display:inline-block; font-size:16px;">
+                               Reset Password
+                            </a>
+                        </div>
+
+                        <p>This link will expire in <strong>15 minutes</strong> for security reasons.</p>
+
+                        <p>If you did not request this password reset, please ignore this email. Your password will remain unchanged.</p>
+
+                        <p style="margin-top:40px;">
+                            Regards,<br>
+                            <strong>Go-Connect Team</strong>
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+                <tr>
+                    <td style="background:#f1f1f1; padding:15px; text-align:center; font-size:12px; color:#777;">
+                        © 2025 Go-Connect. All rights reserved.
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
+""";
+
+        PasswordReset passwordReset = passwordResetRepository.findByToken(token).orElseThrow(()-> new ResourceNotFoundException("PasswordReset" , "token", token));
+
+
+
+        htmlContent = htmlContent.replace("${RESET_LINK}", link);
+        htmlContent = htmlContent.replace("${USERNAME}" , passwordReset.getUser().getUsername());
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo(email);
+        helper.setSubject("Password Reset Request");
+        helper.setText(htmlContent , true);
+        mailSender.send(message);
     }
 }

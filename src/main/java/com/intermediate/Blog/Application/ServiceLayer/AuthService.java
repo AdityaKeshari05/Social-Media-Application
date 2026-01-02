@@ -1,18 +1,22 @@
 package com.intermediate.Blog.Application.ServiceLayer;
 
 import com.intermediate.Blog.Application.DtoLayers.OAuth2RegisterRequest;
+import com.intermediate.Blog.Application.DtoLayers.PasswordChangeDto;
 import com.intermediate.Blog.Application.DtoLayers.UserDto;
 import com.intermediate.Blog.Application.DtoLayers.PendingUser;
+import com.intermediate.Blog.Application.Exception.ResourceNotFoundException;
 import com.intermediate.Blog.Application.Models.User;
 import com.intermediate.Blog.Application.Models.UserProfile;
 import com.intermediate.Blog.Application.Repositories.ProfileRepository;
 import com.intermediate.Blog.Application.Repositories.UserRepo;
 import com.intermediate.Blog.Application.Security.JwtTokenHelper;
+import org.apache.coyote.BadRequestException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -201,5 +205,19 @@ public class AuthService {
         response.put("email", saved.getPassword());
 
         return response;
+    }
+
+    public String changePass(PasswordChangeDto request) throws BadRequestException {
+        String current_email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user  = (User) userRepo.findByEmail(current_email).orElseThrow(()-> new ResourceNotFoundException("User" , "email" , current_email));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("Old password is incorrect");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepo.save(user);
+
+        return "Password changed successfully";
     }
 }

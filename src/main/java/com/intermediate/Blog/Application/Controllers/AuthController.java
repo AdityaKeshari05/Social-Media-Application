@@ -2,16 +2,20 @@ package com.intermediate.Blog.Application.Controllers;
 
 import com.intermediate.Blog.Application.DtoLayers.LoginRequest;
 import com.intermediate.Blog.Application.DtoLayers.OAuth2RegisterRequest;
+import com.intermediate.Blog.Application.DtoLayers.PasswordChangeDto;
 import com.intermediate.Blog.Application.DtoLayers.UserDto;
 import com.intermediate.Blog.Application.Models.User;
 import com.intermediate.Blog.Application.ServiceLayer.AuthService;
+import com.intermediate.Blog.Application.ServiceLayer.PasswordResetService;
+import jakarta.mail.MessagingException;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -22,6 +26,10 @@ public class AuthController {
 
 
     private OAuth2RegisterRequest oAuth2RegisterRequest;
+
+    @Autowired
+    private PasswordResetService passwordResetService;
+
 
 
     @PostMapping("/register")
@@ -56,5 +64,22 @@ public class AuthController {
     public ResponseEntity<Map<String , Object>> registerOAuth2User(@RequestBody OAuth2RegisterRequest request){
         Map<String , Object> response  = authService.registerOAuthUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePass(@RequestBody PasswordChangeDto request) throws BadRequestException {
+        return ResponseEntity.ok(authService.changePass(request));
+    }
+
+    @PostMapping("/forgot-password")
+    public String forgotPassword(@RequestBody Map<String , String > body) throws MessagingException {
+        passwordResetService.forgotPassword(body.get("email"));
+        return "Email sent Successfully";
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody Map<String , String> body){
+        passwordResetService.resetPassword(body.get("token") , body.get("newPassword"));
+        return ResponseEntity.ok("Password reset successfully");
     }
 }
