@@ -84,9 +84,9 @@ public class FollowService {
 
         return followerRepository.findByFollower(currentUser)
                 .stream().map(
-                        f-> new UserPreview(f.getFollower().getId() ,
-                                f.getFollower().getUsername(),
-                                f.getFollower().getUserProfile().getProfilePicture())
+                        f-> new UserPreview(f.getFollowing().getId() ,
+                                f.getFollowing().getUsername(),
+                                f.getFollowing().getUserProfile().getProfilePicture())
                 ).toList();
 
     }
@@ -102,15 +102,19 @@ public class FollowService {
             throw new IllegalStateException("Not authorized");
         }
 
-        User targetUser = request.getTarget();
-        createFollower(currentUser  , targetUser);
+        User requestedUser = request.getRequester();
+        createFollower(requestedUser , currentUser);
+        followRequestRepository.delete(request);
 
         return "Request accepted";
     }
 
-    public String rejectFollowRequest(Long requestId){
+    public String rejectFollowRequest(Long requesterId){
         User currentUser = getCurrentUser();
-        FollowRequest request = followRequestRepository.findById(requestId).orElseThrow(()-> new RuntimeException("Request not found"));
+        FollowRequest request = followRequestRepository.findByRequesterId(requesterId);
+        if(request == null){
+            throw new ResourceNotFoundException("Request","id",requesterId);
+        }
         if(request.getTarget().getId()!=currentUser.getId()){
             throw new IllegalStateException("Not authorized");
         }
@@ -126,11 +130,11 @@ public class FollowService {
     }
 
     private void createFollower(User currentUser , User targetUser){
-        Follower follower = new Follower();
-        follower.setFollower(currentUser);
-        follower.setFollowing(targetUser);
-        follower.setCreatedAt(LocalDateTime.now());
-        followerRepository.save(follower);
+        FollowRelation followRelation = new FollowRelation();
+        followRelation.setFollower(currentUser);
+        followRelation.setFollowing(targetUser);
+        followRelation.setCreatedAt(LocalDateTime.now());
+        followerRepository.save(followRelation);
 
     }
 

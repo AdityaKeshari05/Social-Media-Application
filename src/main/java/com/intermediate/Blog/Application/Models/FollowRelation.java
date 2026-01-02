@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
         uniqueConstraints = {
         @UniqueConstraint(columnNames = {"follower_id" , "following_id"})
         })
-public class Follower {
+public class FollowRelation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;

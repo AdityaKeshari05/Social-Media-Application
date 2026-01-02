@@ -1,9 +1,5 @@
 package com.intermediate.Blog.Application.DtoLayers;
 
-
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
 public class UserPreview {
     private long id;
     private String username;
