@@ -2,16 +2,19 @@ package com.intermediate.Blog.Application.ServiceLayer;
 
 
 import com.intermediate.Blog.Application.DtoLayers.PostDto;
-import com.intermediate.Blog.Application.DtoLayers.UserDto;
+
 import com.intermediate.Blog.Application.Exception.ResourceNotFoundException;
 import com.intermediate.Blog.Application.Models.Category;
-import com.intermediate.Blog.Application.Models.Like;
+import com.intermediate.Blog.Application.ServiceLayer.RecommendationClient;
 import com.intermediate.Blog.Application.Models.Post;
 import com.intermediate.Blog.Application.Models.User;
 import com.intermediate.Blog.Application.Repositories.*;
-import org.hibernate.boot.jaxb.hbm.internal.CacheAccessTypeConverter;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,6 +40,9 @@ public class PostServiceImpl implements PostService{
 
     @Autowired
     private LikeRepository likeRepository;
+
+    @Autowired
+    private RecommendationClient recommendationClient;
 
 
 
@@ -195,11 +201,63 @@ public class PostServiceImpl implements PostService{
     }
 
     @Override
-    public PostDto updatePostImage(Long postId,  String imagePath) {
-        Post post1 = postRepo.findById(postId).orElseThrow(()-> new ResourceNotFoundException("Post" , "id" , postId));
-        post1.setPostImage(imagePath);
-        post1 =  postRepo.save(post1);
-        return modelMapper.map(post1  , PostDto.class);
+    public PostDto updatePostImage(Long postId, String imagePath) {
+        Post post = postRepo.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post", "id", postId));
+        post.setPostImage(imagePath);
+        Post savedPost = postRepo.save(post);
+        
+        PostDto dto = modelMapper.map(savedPost, PostDto.class);
+        dto.setCategoryId(savedPost.getCategory().getId());
+        dto.setCategoryName(savedPost.getCategory().getName());
+        dto.setLikes(savedPost.getLikes());
+        dto.setNoOfComments(commentRepository.countByPost(savedPost));
+        dto.setNoOfLikes(likeRepository.countByPost(savedPost));
+        dto.setPostImage(savedPost.getPostImage());
+        if(savedPost.getUser() != null && savedPost.getUser().getUserProfile() != null){
+            dto.setProfilePicture(savedPost.getUser().getUserProfile().getProfilePicture());
+        }else{
+            dto.setProfilePicture("https://up.yimg.com/ib/th/id/OIP.TpqSE-tsrMBbQurUw2Su-AHaHk?pid=Api&rs=1&c=1&qlt=95&w=119&h=122");
+        }
+        return dto;
+    }
+
+    @Override
+    public Page<PostDto> getViewablePostPaginated(Long currentUserId, int page, int size, String seed) {
+        // Call recommendation API so the FastAPI model is used (recommended IDs used to reorder feed)
+        List<Long> recommendedIds = recommendationClient.getRecommendedPostIds(currentUserId, size * 2, 0.5);
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> postPage = postRepo.findViewablePostsForUser(currentUserId, seed, pageable);
+
+        List<PostDto> dtoList = postPage.getContent().stream()
+                .map(post -> {
+                    PostDto dto = modelMapper.map(post, PostDto.class);
+                    dto.setCategoryId(post.getCategory().getId());
+                    dto.setCategoryName(post.getCategory().getName());
+                    dto.setLikes(post.getLikes());
+                    dto.setNoOfComments(commentRepository.countByPost(post));
+                    dto.setNoOfLikes(likeRepository.countByPost(post));
+                    dto.setPostImage(post.getPostImage());
+                    if (post.getUser() != null && post.getUser().getUserProfile() != null) {
+                        dto.setProfilePicture(post.getUser().getUserProfile().getProfilePicture());
+                    } else {
+                        dto.setProfilePicture("https://up.yimg.com/ib/th/id/OIP.TpqSE-tsrMBbQurUw2Su-AHaHk?pid=Api&rs=1&c=1&qlt=95&w=119&h=122");
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        // Put recommended posts first (same order as returned by recommendation API)
+        dtoList.sort((a, b) -> {
+            int idxA = recommendedIds.indexOf(a.getId());
+            int idxB = recommendedIds.indexOf(b.getId());
+            if (idxA < 0 && idxB < 0) return 0;
+            if (idxA < 0) return 1;
+            if (idxB < 0) return -1;
+            return Integer.compare(idxA, idxB);
+        });
+
+        return new PageImpl<>(dtoList, pageable, postPage.getTotalElements());
     }
 
 

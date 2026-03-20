@@ -66,6 +66,7 @@ public class PasswordResetService {
 
         User user = reset.getUser();
         user.setPassword(passwordEncoder.encode(newPassword));
+        userRepo.save(user);
 
         passwordResetRepository.delete(reset);
     }

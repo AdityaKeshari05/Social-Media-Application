@@ -12,11 +12,22 @@ public class UserDto {
     private Long id;
     private String username;
     private String email;
+    private com.intermediate.Blog.Application.Models.AccountVisibility accountVisibility;
+    private String profilePicture;
 
-    public UserDto(Long id, String username, String email) {
+    public UserDto(Long id, String username, String email, com.intermediate.Blog.Application.Models.AccountVisibility accountVisibility) {
         this.id = id;
         this.username = username;
         this.email = email;
+        this.accountVisibility = accountVisibility;
+    }
+
+    public UserDto(Long id, String username, String email, com.intermediate.Blog.Application.Models.AccountVisibility accountVisibility, String profilePicture) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.accountVisibility = accountVisibility;
+        this.profilePicture = profilePicture;
     }
 
     public UserDto(){
@@ -45,5 +56,21 @@ public class UserDto {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public com.intermediate.Blog.Application.Models.AccountVisibility getAccountVisibility() {
+        return accountVisibility;
+    }
+
+    public void setAccountVisibility(com.intermediate.Blog.Application.Models.AccountVisibility accountVisibility) {
+        this.accountVisibility = accountVisibility;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
     }
 }

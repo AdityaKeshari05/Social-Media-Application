@@ -1,7 +1,7 @@
 package com.intermediate.Blog.Application.DtoLayers;
 
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -9,26 +9,25 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PasswordChangeDto {
 
-    @NotNull
+    @NotBlank(message = "Current password is required")
     private String oldPassword;
 
-    @NotNull
+    @NotBlank(message = "New password is required")
     private String newPassword;
 
-
-    public @NotNull String getOldPassword() {
+    public String getOldPassword() {
         return oldPassword;
     }
 
-    public void setOldPassword(@NotNull String oldPassword) {
+    public void setOldPassword(String oldPassword) {
         this.oldPassword = oldPassword;
     }
 
-    public @NotNull String getNewPassword() {
+    public String getNewPassword() {
         return newPassword;
     }
 
-    public void setNewPassword(@NotNull String newPassword) {
+    public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
     }
 }

@@ -1,17 +1,19 @@
 package com.intermediate.Blog.Application.DtoLayers;
 
-
-import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
-
 
 @AllArgsConstructor
 @NoArgsConstructor
 public class OAuth2RegisterRequest {
+
+    @NotBlank(message = "Email is required")
     private String email;
+
+    @NotBlank(message = "Username is required")
     private String username;
+
     private String password;
 
     public String getEmail() {

@@ -1,7 +1,6 @@
 package com.intermediate.Blog.Application.Exception;
 
 import lombok.Data;
-import org.hibernate.sql.exec.spi.StandardEntityInstanceResolver;
 
 @Data
 public class ResourceNotFoundException extends RuntimeException{
@@ -11,7 +10,7 @@ public class ResourceNotFoundException extends RuntimeException{
     private Object fieldValue;
 
     public ResourceNotFoundException(String resourceName , String fieldName , Object fieldValue){
-        super(String.format("%s not found with %s : %s'",resourceName,fieldName,fieldValue));
+        super(String.format("%s not found with %s : %s", resourceName, fieldName, String.valueOf(fieldValue)));
         this.resourceName = resourceName;
         this.fieldName = fieldName;
         this.fieldValue = fieldValue;

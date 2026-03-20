@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -52,6 +52,9 @@ public class AuthService {
     @Autowired
     private ProfileRepository profileRepository;
 
+    @Autowired
+    private CurrentUserService currentUserService;
+
 
 
     public String register(User userRequest) {
@@ -73,7 +76,7 @@ public class AuthService {
 
         otpService.savePendingUser(userRequest.getEmail(), user);
 
-        emailService.sendMail(userRequest.getEmail() , otp);
+        emailService.sendMail(userRequest.getEmail(), otp, userRequest.getUsername());
 
 
 
@@ -138,7 +141,7 @@ public class AuthService {
         userRepo.save(user);
 
 
-        emailService.sendLoginEmail(user.getEmail() , otp);
+        emailService.sendLoginEmail(user.getEmail(), otp, user.getUsername());
 
         Map<String , Object> response = new HashMap<>();
         response.put("message" , "An Otp is sent to your registered Email Id . Please Enter the Otp to Login .");
@@ -158,7 +161,7 @@ public class AuthService {
         user.setLoginOtp(null);
         userRepo.save(user);
 
-        String token = jwtTokenHelper.generateToken(user.getUsername() , user.getRole());
+        String token = jwtTokenHelper.generateToken(user.getEmail() , user.getRole());
 
         Map<String ,Object> response = new HashMap<>();
         response.put("Message" , "Login Successful");
@@ -185,7 +188,10 @@ public class AuthService {
 
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        String rawPassword = (request.getPassword() == null || request.getPassword().isBlank())
+                ? UUID.randomUUID().toString()
+                : request.getPassword();
+        user.setPassword(passwordEncoder.encode(rawPassword));
         user.setUsername(username);
         user.setRole("USER");
         user.setVerified(true);
@@ -196,21 +202,19 @@ public class AuthService {
         userProfile.setUser(saved);
         profileRepository.save(userProfile);
 
-        String token = jwtTokenHelper.generateToken(saved.getUsername()  , saved.getRole());
+        String token = jwtTokenHelper.generateToken(saved.getEmail()  , saved.getRole());
 
         Map<String , Object> response = new HashMap<>();
         response.put("message" , "Registration Successful");
         response.put("token" , token);
         response.put("username" , saved.getUsername());
-        response.put("email", saved.getPassword());
+        response.put("email", saved.getEmail());
 
         return response;
     }
 
     public String changePass(PasswordChangeDto request) throws BadRequestException {
-        String current_email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        User user  = (User) userRepo.findByEmail(current_email).orElseThrow(()-> new ResourceNotFoundException("User" , "email" , current_email));
+        User user = currentUserService.getCurrentUser();
 
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             throw new RuntimeException("Old password is incorrect");

@@ -2,6 +2,7 @@ package com.intermediate.Blog.Application.Controllers;
 
 
 
+import com.intermediate.Blog.Application.DtoLayers.MessageResponse;
 import com.intermediate.Blog.Application.Models.Category;
 import com.intermediate.Blog.Application.Models.User;
 import com.intermediate.Blog.Application.Repositories.PostRepository;
@@ -9,11 +10,9 @@ import com.intermediate.Blog.Application.Repositories.UserRepo;
 import com.intermediate.Blog.Application.ServiceLayer.CategoryService;
 import com.intermediate.Blog.Application.ServiceLayer.PostService;
 import com.intermediate.Blog.Application.ServiceLayer.UserService;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -65,8 +64,8 @@ public class CategoryController {
 
         @DeleteMapping("/{id}")
         @PreAuthorize("hasRole('ADMIN')")
-        public ResponseEntity<String> deleteCategory(@PathVariable Long id){
+        public ResponseEntity<MessageResponse> deleteCategory(@PathVariable Long id) {
             categoryService.deleteCategory(id);
-            return ResponseEntity.ok("Category Deleted Successfully");
+            return ResponseEntity.ok(new MessageResponse("Category deleted successfully"));
         }
 }

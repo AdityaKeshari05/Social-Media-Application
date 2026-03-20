@@ -1,7 +1,7 @@
 package com.intermediate.Blog.Application.ServiceLayer;
 
 import com.intermediate.Blog.Application.DtoLayers.PostDto;
-import com.intermediate.Blog.Application.Models.Post;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -16,6 +16,7 @@ public interface PostService {
     List<PostDto> getPostByCategoryId(Long id);
 
     PostDto updatePostImage(Long postId , String imagePath);
+    Page<PostDto> getViewablePostPaginated(Long currentUserId , int page , int size , String seed);
 
 
 

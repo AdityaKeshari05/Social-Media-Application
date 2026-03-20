@@ -5,8 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import javax.xml.crypto.dsig.spec.XSLTTransformParameterSpec;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,7 +16,7 @@ public class Post {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    private long id;
 
     private String title;
 
@@ -27,7 +25,7 @@ public class Post {
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime createdAt ;
+    private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

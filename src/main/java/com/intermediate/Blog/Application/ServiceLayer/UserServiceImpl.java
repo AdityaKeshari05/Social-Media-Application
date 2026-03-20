@@ -1,9 +1,12 @@
 package com.intermediate.Blog.Application.ServiceLayer;
 
 import com.intermediate.Blog.Application.DtoLayers.UserDto;
+import com.intermediate.Blog.Application.DtoLayers.UserPreview;
+import com.intermediate.Blog.Application.Exception.ConflictException;
 import com.intermediate.Blog.Application.Exception.ResourceNotFoundException;
 import com.intermediate.Blog.Application.Models.AccountVisibility;
 import com.intermediate.Blog.Application.Models.User;
+import com.intermediate.Blog.Application.Repositories.FollowerRepository;
 import com.intermediate.Blog.Application.Repositories.UserRepo;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +14,7 @@ import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,12 +25,63 @@ public class UserServiceImpl implements UserService {
     private UserRepo repo;
 
     @Autowired
+    private FollowerRepository followerRepository;
+
+    @Autowired
+    private CurrentUserService currentUserService;
+
+    @Autowired
+    private FollowService followService;
+
+    @Autowired
     private ModelMapper modelMapper;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
 
+
+    @Override
+    public List<UserPreview> searchByUsername(String query) {
+        if (query == null || query.isBlank()) {
+            return Collections.emptyList();
+        }
+        User currentUser = currentUserService.getCurrentUser();
+        String q = query.trim();
+        return repo.findTop20ByUsernameContainingIgnoreCaseOrderByUsernameAsc(q)
+                .stream()
+                .map(user -> {
+                    String pic = user.getUserProfile() != null ? user.getUserProfile().getProfilePicture() : null;
+                    UserPreview preview = new UserPreview(user.getId(), user.getUsername(), pic);
+                    if (user.getUserProfile() != null) {
+                        preview.setName(user.getUserProfile().getName());
+                    }
+                    long followersCount = followerRepository.countFollowers(user.getId());
+                    preview.setFollowersCount(followersCount);
+
+                    boolean following = followerRepository.existsByFollowerAndFollowing(currentUser, user);
+                    preview.setFollowing(following);
+
+                    if (following) {
+                        // Build a short "Followed by X and N others" summary using mutual followers
+                        var mutual = followService.getMutualFollowers(user.getId());
+                        int total = mutual.size();
+                        if (total > 0) {
+                            String summary;
+                            if (total == 1) {
+                                summary = "Followed by " + mutual.get(0).getUsername();
+                            } else if (total == 2) {
+                                summary = "Followed by " + mutual.get(0).getUsername() + " and " + mutual.get(1).getUsername();
+                            } else {
+                                summary = "Followed by " + mutual.get(0).getUsername() + ", " + mutual.get(1).getUsername() + " and " + (total - 2) + " others";
+                            }
+                            preview.setFollowedBySummary(summary);
+                        }
+                    }
+                    return preview;
+                })
+                .collect(Collectors.toList());
+    }
 
     @Override
     public UserDto createUser(User userRequest) {
@@ -47,9 +102,21 @@ public class UserServiceImpl implements UserService {
         User user = repo.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
+        String newUsername = userRequest.getUsername();
+        if (newUsername != null && !newUsername.trim().isEmpty() && !newUsername.equals(user.getUsername())) {
+            String trimmed = newUsername.trim();
+            repo.findByUsernameIgnoreCase(trimmed).ifPresent(existing -> {
+                if (existing.getId() != userId) {
+                    throw new ConflictException("Username already taken. Please choose another.");
+                }
+            });
+        }
+
         // Only fields you want to update
-        user.setUsername(userRequest.getUsername());
-        user.setEmail(userRequest.getEmail());
+        if (newUsername != null && !newUsername.trim().isEmpty()) user.setUsername(newUsername.trim());
+        if (userRequest.getEmail() != null && !userRequest.getEmail().trim().isEmpty()) {
+            user.setEmail(userRequest.getEmail().trim());
+        }
 
 
         if (userRequest.getPassword() != null && !userRequest.getPassword().isEmpty()) {
@@ -59,6 +126,17 @@ public class UserServiceImpl implements UserService {
         User updatedUser = repo.save(user);
 
         return modelMapper.map(updatedUser, UserDto.class);
+    }
+
+    @Override
+    public boolean isUsernameAvailable(String username, Long currentUserId) {
+        if (username == null) return false;
+        String trimmed = username.trim();
+        if (trimmed.isEmpty()) return false;
+
+        return repo.findByUsernameIgnoreCase(trimmed)
+                .map(existing -> existing.getId() == currentUserId)
+                .orElse(true);
     }
 
 

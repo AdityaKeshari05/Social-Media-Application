@@ -1,23 +1,30 @@
 package com.intermediate.Blog.Application.DtoLayers;
 
-
 import com.intermediate.Blog.Application.Models.Like;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostDto {
 
     private Long id;
+
+    @NotBlank(message = "Content is required")
     private String content;
+
+    @NotBlank(message = "Title is required")
     private String title;
+
     private LocalDateTime createdAt;
     private UserDto user;
     private List<CommentDto> comments;
+
+    @Min(value = 1, message = "Category is required")
     private long categoryId;
     private String categoryName;
     private String profilePicture;

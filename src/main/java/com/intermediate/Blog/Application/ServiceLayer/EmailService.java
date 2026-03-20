@@ -23,67 +23,57 @@ public class EmailService {
     @Autowired
     private PasswordResetRepository passwordResetRepository;
 
-    public void sendMail(String toEmail , String otp){
+    public void sendMail(String toEmail, String otp, String username) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(toEmail);
-            helper.setSubject("Your One Time Password (OTP) for Verification");
+            helper.setSubject("Verify your email – Go-Connect");
 
             String htmlContent = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>OTP Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify your email – Go-Connect</title>
 </head>
-<body style="font-family: Arial, sans-serif; background-color:#f4f4f7; padding: 40px;">
-    <table width="100%" cellpadding="0" cellspacing="0">
+<body style="margin:0; padding:0; background-color:#eef2f6; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef2f6; padding:40px 20px;">
         <tr>
             <td align="center">
-
-                <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:10px; padding:30px;">
-                    
+                <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
                     <tr>
-                        <td align="center" style="padding-bottom:20px;">
-                            <h2 style="color:#333333; margin:0; font-size:24px;">Email Verification</h2>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td style="color:#555555; font-size:16px; line-height:24px;">
-                            <p>Hello,</p>
-                            <p>
-                                Thank you for registering!  
-                                To complete your signup and verify your email address, please use the One-Time Password (OTP) provided below:
+                        <td style="padding:28px 32px 24px; border-bottom:1px solid #e2e8f0;">
+                            <p style="margin:0; font-size:22px; font-weight:700;">
+                                <span style="color:#1e293b;">Go-</span><span style="color:#2563eb;">Connect</span>
                             </p>
                         </td>
                     </tr>
-
                     <tr>
-                        <td align="center" style="padding: 25px 0;">
-                            <div style="background:#4b7bec; color:white; display:inline-block; padding:15px 25px; border-radius:8px; font-size:28px; letter-spacing:4px; font-weight:bold;">
-                                {{OTP_CODE}}
-                            </div>
+                        <td style="padding:28px 32px;">
+                            <h1 style="margin:0 0 8px; font-size:20px; font-weight:600; color:#1e293b;">Verify your email</h1>
+                            <p style="margin:0 0 20px; font-size:15px; line-height:22px; color:#64748b;">Hi <strong style="color:#1e293b;">{{USERNAME}}</strong>,</p>
+                            <p style="margin:0 0 24px; font-size:15px; line-height:22px; color:#475569;">
+                                Thanks for signing up. Use the code below to complete your registration and verify your email address.
+                            </p>
+                            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                                <tr>
+                                    <td style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 24px; font-size:26px; font-weight:700; letter-spacing:6px; color:#1e293b; font-family:ui-monospace, monospace;">
+                                        {{OTP_CODE}}
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin:0; font-size:14px; line-height:20px; color:#64748b;">This code expires in <strong>10 minutes</strong>. If you didn’t request this, you can ignore this email.</p>
                         </td>
                     </tr>
-
                     <tr>
-                        <td style="color:#555555; font-size:16px; line-height:24px;">
-                            <p>This OTP is valid for <strong>10 minutes</strong>.</p>
-                            <p>If you did not request this, you can safely ignore this email.</p>
+                        <td style="padding:16px 32px; background:#f8fafc; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
+                            © 2025 Go-Connect. All rights reserved.
                         </td>
                     </tr>
-
-                    <tr>
-                        <td style="padding-top:30px; color:#999999; font-size:14px; text-align:center;">
-                            © 2025 YourApp. All Rights Reserved.
-                        </td>
-                    </tr>
-
                 </table>
-
             </td>
         </tr>
     </table>
@@ -91,157 +81,144 @@ public class EmailService {
 </html>
 """;
 
-                htmlContent = htmlContent.replace("{{OTP_CODE}}",otp);
-                helper.setText(htmlContent, true);
-                mailSender.send(message);
-
-
-        }catch (Exception e){
-            throw new RuntimeException("Failed to send email "+ e.getMessage());
-        }
-
-    }
-
-    public void sendWelcomeMail(String toEmail , String username){
-
-        try{
-
-            MimeMessage message  = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message , true, "UTF-8");
-
-            String htmlContent =
-                    "<!DOCTYPE html>" +
-                            "<html>" +
-                            "<head>" +
-                            "    <meta charset='UTF-8'>" +
-                            "    <title>Welcome to Our Platform</title>" +
-                            "</head>" +
-                            "<body style='font-family: Arial, sans-serif; background-color:#f4f4f7; padding: 40px;'>" +
-                            "    <table width='100%' cellpadding='0' cellspacing='0'>" +
-                            "        <tr>" +
-                            "            <td align='center'>" +
-
-                            "                <table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff; border-radius:10px; padding:30px;'>" +
-
-                            "                    <tr>" +
-                            "                        <td align='center' style='padding-bottom:20px;'>" +
-                            "                            <h2 style='color:#333333; margin:0; font-size:26px;'>Welcome to Our Community!</h2>" +
-                            "                        </td>" +
-                            "                    </tr>" +
-
-                            "                    <tr>" +
-                            "                        <td style='color:#555555; font-size:16px; line-height:24px;'>" +
-                            "                            <p>Hi <strong>{{USERNAME}}</strong>,</p>" +
-                            "                            <p>Great news! Your email has been successfully verified and your account is now active.</p>" +
-                            "                            <p>We're excited to have you on board. You can now log in and start using all the features of our platform.</p>" +
-                            "                        </td>" +
-                            "                    </tr>" +
-
-                            "                    <tr>" +
-                            "                        <td align='center' style='padding: 25px 0;'>" +
-                            "                            <a href='{{LOGIN_LINK}}' style='background:#4b7bec; color:white; padding:12px 25px; text-decoration:none; border-radius:6px; font-size:16px;'>Login to Your Account</a>" +
-                            "                        </td>" +
-                            "                    </tr>" +
-
-                            "                    <tr>" +
-                            "                        <td style='color:#555555; font-size:16px; line-height:24px;'>" +
-                            "                            <p>If you did not register this account, please ignore this email.</p>" +
-                            "                        </td>" +
-                            "                    </tr>" +
-
-                            "                    <tr>" +
-                            "                        <td style='padding-top:30px; color:#999999; font-size:14px; text-align:center;'>" +
-                            "                            © 2025 YourApp. All Rights Reserved." +
-                            "                        </td>" +
-                            "                    </tr>" +
-
-                            "                </table>" +
-
-                            "            </td>" +
-                            "        </tr>" +
-                            "    </table>" +
-                            "</body>" +
-                            "</html>";
-
-
-            helper.setTo(toEmail);
-            htmlContent = htmlContent.replace("{{USERNAME}}" , username);
-            htmlContent = htmlContent.replace("{{LOGIN_LINK}}" , "https://localhost:8080/api/posts");
-            helper.setText(htmlContent , true);
-            helper.setSubject("Welcome Email");
+            htmlContent = htmlContent.replace("{{OTP_CODE}}", otp).replace("{{USERNAME}}", username);
+            helper.setText(htmlContent, true);
             mailSender.send(message);
-        }catch (Exception e){
-            throw new RuntimeException(e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send email " + e.getMessage());
         }
-
     }
 
-    public void sendLoginEmail(String toEmail , String otp){
+    public void sendWelcomeMail(String toEmail, String username) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            String htmlContent =  """
+            helper.setTo(toEmail);
+            helper.setSubject("Welcome to Go-Connect");
+
+            String loginLink = "http://localhost:5173/login";
+            String htmlContent = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login Verification</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Go-Connect</title>
 </head>
-<body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial, sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4; padding:30px 0;">
+<body style="margin:0; padding:0; background-color:#eef2f6; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef2f6; padding:40px 20px;">
         <tr>
             <td align="center">
-
-                <table width="600" style="background:#ffffff; border-radius:10px; padding:30px;">
+                <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
                     <tr>
-                        <td align="center" style="padding-bottom:20px;">
-                            <h2 style="color:#333; margin:0;">Login Verification Required</h2>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td style="color:#555; font-size:15px; line-height:24px;">
-                            <p>Hello,</p>
-
-                            <p>We received a login attempt to your account. To continue, please use the One-Time Password (OTP) below to verify it is you.</p>
-
-                            <p style="font-size:18px; margin:20px 0 10px 0;">Your Login OTP:</p>
-
-                            <p style="font-size:32px; font-weight:bold; color:black; letter-spacing:4px; margin:0; padding:10px 0;">
-                                ${OTP_CODE}
+                        <td style="padding:28px 32px 24px; border-bottom:1px solid #e2e8f0;">
+                            <p style="margin:0; font-size:22px; font-weight:700;">
+                                <span style="color:#1e293b;">Go-</span><span style="color:#2563eb;">Connect</span>
                             </p>
-
-                            <p>This OTP is valid for <b>3 minutes</b>. Please do not share it with anyone.</p>
-
-                            <p>If this was not you, we recommend updating your password immediately.</p>
-
-                            <br />
-
-                            <p>Regards,<br /><b>Your App Team</b></p>
                         </td>
                     </tr>
-
                     <tr>
-                        <td align="center" style="padding-top:30px; color:#999; font-size:12px;">
-                            © 2025 Your Application. All Rights Reserved.
+                        <td style="padding:28px 32px;">
+                            <h1 style="margin:0 0 8px; font-size:20px; font-weight:600; color:#1e293b;">Welcome to Go-Connect</h1>
+                            <p style="margin:0 0 20px; font-size:15px; line-height:22px; color:#64748b;">Hi <strong style="color:#1e293b;">{{USERNAME}}</strong>,</p>
+                            <p style="margin:0 0 24px; font-size:15px; line-height:22px; color:#475569;">
+                                Your email is verified and your account is active. You can sign in and start exploring your feed, posting, and connecting with others.
+                            </p>
+                            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                                <tr>
+                                    <td>
+                                        <a href="{{LOGIN_LINK}}" style="display:inline-block; background:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:8px; font-size:15px; font-weight:500;">Sign in to Go-Connect</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin:0; font-size:14px; line-height:20px; color:#64748b;">If you didn’t create this account, you can ignore this email.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:16px 32px; background:#f8fafc; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
+                            © 2025 Go-Connect. All rights reserved.
                         </td>
                     </tr>
                 </table>
-
             </td>
         </tr>
     </table>
 </body>
 </html>
 """;
-            htmlContent = htmlContent.replace("${OTP_CODE}", otp);
-            helper.setTo(toEmail);
+
+            htmlContent = htmlContent.replace("{{USERNAME}}", username).replace("{{LOGIN_LINK}}", loginLink);
             helper.setText(htmlContent, true);
-            helper.setSubject("Your Single-Use Code");
             mailSender.send(message);
-        }catch(Exception e){
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    public void sendLoginEmail(String toEmail, String otp, String username) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("Your login code – Go-Connect");
+
+            String htmlContent = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your login code – Go-Connect</title>
+</head>
+<body style="margin:0; padding:0; background-color:#eef2f6; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef2f6; padding:40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <tr>
+                        <td style="padding:28px 32px 24px; border-bottom:1px solid #e2e8f0;">
+                            <p style="margin:0; font-size:22px; font-weight:700;">
+                                <span style="color:#1e293b;">Go-</span><span style="color:#2563eb;">Connect</span>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:28px 32px;">
+                            <h1 style="margin:0 0 8px; font-size:20px; font-weight:600; color:#1e293b;">Sign-in verification</h1>
+                            <p style="margin:0 0 20px; font-size:15px; line-height:22px; color:#64748b;">Hi <strong style="color:#1e293b;">{{USERNAME}}</strong>,</p>
+                            <p style="margin:0 0 24px; font-size:15px; line-height:22px; color:#475569;">
+                                We received a sign-in attempt for your account. Use the code below to complete login.
+                            </p>
+                            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                                <tr>
+                                    <td style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 24px; font-size:26px; font-weight:700; letter-spacing:6px; color:#1e293b; font-family:ui-monospace, monospace;">
+                                        {{OTP_CODE}}
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin:0; font-size:14px; line-height:20px; color:#64748b;">This code expires in <strong>3 minutes</strong>. Don’t share it with anyone.</p>
+                            <p style="margin:16px 0 0; font-size:14px; line-height:20px; color:#64748b;">If this wasn’t you, we recommend changing your password after signing in.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:16px 32px; background:#f8fafc; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
+                            © 2025 Go-Connect. All rights reserved.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+""";
+
+            htmlContent = htmlContent.replace("{{OTP_CODE}}", otp).replace("{{USERNAME}}", username);
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
     }
@@ -257,64 +234,47 @@ public class EmailService {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Reset Your Password - Go-Connect</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset your password – Go-Connect</title>
 </head>
-<body style="margin:0; padding:0; background-color:#f4f6f8; font-family:Arial, sans-serif;">
-
-<table width="100%" cellpadding="0" cellspacing="0">
-    <tr>
-        <td align="center" style="padding:40px 0;">
-            <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-
-                <!-- HEADER -->
-                <tr>
-                    <td style="background:#0d6efd; padding:20px; text-align:center;">
-                        <h1 style="color:#ffffff; margin:0;">Go-Connect</h1>
-                    </td>
-                </tr>
-
-                <!-- BODY -->
-                <tr>
-                    <td style="padding:30px; color:#333;">
-                        <h2 style="margin-top:0;">Reset Your Password</h2>
-
-                        <p>Hello, ${USERNAME},</p>
-
-                        <p>We received a request to reset your password for your <strong>Go-Connect</strong> account.</p>
-
-                        <p>Click the button below to reset your password:</p>
-
-                        <!-- BUTTON -->
-                        <div style="text-align:center; margin:30px 0;">
-                            <a href="${RESET_LINK}"3
-                               style="background:#0d6efd; color:#ffffff; padding:14px 28px; text-decoration:none; border-radius:6px; display:inline-block; font-size:16px;">
-                               Reset Password
-                            </a>
-                        </div>
-
-                        <p>This link will expire in <strong>15 minutes</strong> for security reasons.</p>
-
-                        <p>If you did not request this password reset, please ignore this email. Your password will remain unchanged.</p>
-
-                        <p style="margin-top:40px;">
-                            Regards,<br>
-                            <strong>Go-Connect Team</strong>
-                        </p>
-                    </td>
-                </tr>
-
-                <!-- FOOTER -->
-                <tr>
-                    <td style="background:#f1f1f1; padding:15px; text-align:center; font-size:12px; color:#777;">
-                        © 2025 Go-Connect. All rights reserved.
-                    </td>
-                </tr>
-
-            </table>
-        </td>
-    </tr>
-</table>
-
+<body style="margin:0; padding:0; background-color:#eef2f6; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef2f6; padding:40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <tr>
+                        <td style="padding:28px 32px 24px; border-bottom:1px solid #e2e8f0;">
+                            <p style="margin:0; font-size:22px; font-weight:700;">
+                                <span style="color:#1e293b;">Go-</span><span style="color:#2563eb;">Connect</span>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:28px 32px;">
+                            <h1 style="margin:0 0 8px; font-size:20px; font-weight:600; color:#1e293b;">Reset your password</h1>
+                            <p style="margin:0 0 20px; font-size:15px; line-height:22px; color:#64748b;">Hi <strong style="color:#1e293b;">${USERNAME}</strong>,</p>
+                            <p style="margin:0 0 24px; font-size:15px; line-height:22px; color:#475569;">
+                                We received a request to reset the password for your Go-Connect account. Click the button below to set a new password.
+                            </p>
+                            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                                <tr>
+                                    <td>
+                                        <a href="${RESET_LINK}" style="display:inline-block; background:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:8px; font-size:15px; font-weight:500;">Reset password</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin:0; font-size:14px; line-height:20px; color:#64748b;">This link expires in <strong>15 minutes</strong>. If you didn’t request this, you can ignore this email and your password will stay the same.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:16px 32px; background:#f8fafc; border-top:1px solid #e2e8f0; font-size:12px; color:#94a3b8; text-align:center;">
+                            © 2025 Go-Connect. All rights reserved.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
 """;

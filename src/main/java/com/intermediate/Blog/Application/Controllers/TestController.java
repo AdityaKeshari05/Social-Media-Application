@@ -1,6 +1,7 @@
 package com.intermediate.Blog.Application.Controllers;
 
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     @GetMapping("/test")
-    public String test(){
-        return "App is Running";
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok("App is running");
     }
 }

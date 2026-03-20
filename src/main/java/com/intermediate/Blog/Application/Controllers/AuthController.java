@@ -1,6 +1,7 @@
 package com.intermediate.Blog.Application.Controllers;
 
 import com.intermediate.Blog.Application.DtoLayers.LoginRequest;
+import com.intermediate.Blog.Application.DtoLayers.MessageResponse;
 import com.intermediate.Blog.Application.DtoLayers.OAuth2RegisterRequest;
 import com.intermediate.Blog.Application.DtoLayers.PasswordChangeDto;
 import com.intermediate.Blog.Application.DtoLayers.UserDto;
@@ -12,7 +13,7 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -24,24 +25,20 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-
-    private OAuth2RegisterRequest oAuth2RegisterRequest;
-
     @Autowired
     private PasswordResetService passwordResetService;
 
 
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
-
+    public ResponseEntity<MessageResponse> register(@RequestBody User user) {
         String createdUser = authService.register(user);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+        return new ResponseEntity<>(new MessageResponse(createdUser), HttpStatus.CREATED);
     }
 
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request.getUsername(), request.getPassword()));
     }
 
@@ -61,25 +58,25 @@ public class AuthController {
 
 
     @PostMapping("/oauth2-register")
-    public ResponseEntity<Map<String , Object>> registerOAuth2User(@RequestBody OAuth2RegisterRequest request){
+    public ResponseEntity<Map<String, Object>> registerOAuth2User(@Valid @RequestBody OAuth2RegisterRequest request) {
         Map<String , Object> response  = authService.registerOAuthUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<String> changePass(@RequestBody PasswordChangeDto request) throws BadRequestException {
-        return ResponseEntity.ok(authService.changePass(request));
+    public ResponseEntity<MessageResponse> changePass(@Valid @RequestBody PasswordChangeDto request) throws BadRequestException {
+        return ResponseEntity.ok(new MessageResponse(authService.changePass(request)));
     }
 
     @PostMapping("/forgot-password")
-    public String forgotPassword(@RequestBody Map<String , String > body) throws MessagingException {
+    public ResponseEntity<MessageResponse> forgotPassword(@RequestBody Map<String, String> body) throws MessagingException {
         passwordResetService.forgotPassword(body.get("email"));
-        return "Email sent Successfully";
+        return ResponseEntity.ok(new MessageResponse("Email sent successfully"));
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody Map<String , String> body){
-        passwordResetService.resetPassword(body.get("token") , body.get("newPassword"));
-        return ResponseEntity.ok("Password reset successfully");
+    public ResponseEntity<MessageResponse> resetPassword(@RequestBody Map<String, String> body) {
+        passwordResetService.resetPassword(body.get("token"), body.get("newPassword"));
+        return ResponseEntity.ok(new MessageResponse("Password reset successfully"));
     }
 }

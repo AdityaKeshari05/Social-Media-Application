@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @OpenAPIDefinition(
 		info = 	@Info(
-				title = "Authentication Api",
+				title = "Social-Media Api's ",
 				version = "1.0",
 				description = "Api documentation for Authentication"
 		)

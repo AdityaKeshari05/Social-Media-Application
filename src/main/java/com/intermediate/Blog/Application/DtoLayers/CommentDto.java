@@ -1,7 +1,6 @@
 package com.intermediate.Blog.Application.DtoLayers;
 
-
-import com.intermediate.Blog.Application.Models.User;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,10 +10,14 @@ import java.time.LocalDateTime;
 public class CommentDto {
 
     private Long id;
+
+    @NotBlank(message = "Comment text is required")
     private String text;
     private LocalDateTime createdAt;
     private Long postId;
     private UserDto user;
+    private Long parentCommentId;
+    private Long likesCount;
 
     public Long getId() {
         return id;
@@ -54,5 +57,21 @@ public class CommentDto {
 
     public void setUser(UserDto user) {
         this.user = user;
+    }
+
+    public Long getParentCommentId() {
+        return parentCommentId;
+    }
+
+    public void setParentCommentId(Long parentCommentId) {
+        this.parentCommentId = parentCommentId;
+    }
+
+    public Long getLikesCount() {
+        return likesCount;
+    }
+
+    public void setLikesCount(Long likesCount) {
+        this.likesCount = likesCount;
     }
 }

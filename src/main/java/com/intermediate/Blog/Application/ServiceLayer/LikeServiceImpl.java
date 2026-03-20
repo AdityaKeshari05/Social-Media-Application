@@ -32,6 +32,9 @@ public class LikeServiceImpl implements LikeService {
     @Autowired
     private PostRepository postRepo;
 
+    @Autowired
+    private NotificationService  notificationService;
+
 
 
     @Override
@@ -48,6 +51,7 @@ public class LikeServiceImpl implements LikeService {
         like.setPost(post);
         like.setLikedAt(LocalDateTime.now());
         like = likeRepo.save(like);
+        notificationService.createLikeNotification(post , user);
         return like;
     }
 
@@ -81,11 +85,20 @@ public class LikeServiceImpl implements LikeService {
         List<Like> likes = likeRepo.findAllByPost(post);
 
         return likes.stream()
-                .map(like -> new UserDto(
-                        like.getUser().getId(),
-                        like.getUser().getUsername(),
-                        like.getUser().getEmail()
-                ))
+                .map(like -> {
+                    User u = like.getUser();
+                    String profilePicture = null;
+                    if (u.getUserProfile() != null) {
+                        profilePicture = u.getUserProfile().getProfilePicture();
+                    }
+                    return new UserDto(
+                            u.getId(),
+                            u.getUsername(),
+                            u.getEmail(),
+                            u.getAccountVisibility(),
+                            profilePicture
+                    );
+                })
                 .collect(Collectors.toList());
         }
 

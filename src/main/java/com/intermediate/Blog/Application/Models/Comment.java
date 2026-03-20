@@ -4,7 +4,6 @@ package com.intermediate.Blog.Application.Models;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnJava;
 
 import java.time.LocalDateTime;
 
@@ -16,13 +15,13 @@ public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    long id;
+    private long id;
 
     private String text;
 
     @CreationTimestamp
     @Column(updatable = false)
-    private LocalDateTime createdAt ;
+    private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "post_id")
@@ -31,6 +30,10 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "parent_comment_id")
+    private Comment parent;
 
     public long getId() {
         return id;
@@ -70,5 +73,13 @@ public class Comment {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Comment getParent() {
+        return parent;
+    }
+
+    public void setParent(Comment parent) {
+        this.parent = parent;
     }
 }
